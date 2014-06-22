@@ -7,18 +7,30 @@
     '$timeout', function($timeout) {
       return {
         restrict: 'E',
-        template: "<div tabindex=\"0\" class=\"json-explorer\">\n  <h3>{{ label }}</h3>\n  <table class=\"path\">\n    <tr ng-repeat=\"p in path\">\n      <td>{{ p.pkey }}</td>\n      <td>{{ get_type(obj) }}</td>\n    </tr>\n  </table>\n  <div ng-if=\"!is_object\" class=\"value\">{{ value }}</div>\n  <table ng-if=\"is_object\" class=\"attributes\">\n    <tr ng-repeat=\"a in attrs\" ng-class=\"{selected: $index==index}\">\n      <td>{{ a.key  }}</td>\n      <td>{{ a.type }}</td>\n      <td>{{ a.display  }}</td>\n    </tr>\n  </table>\n  <h1>{{ focus }}</h1>\n  <h2>{{ index }}</h2>\n  <pre>{{ selected_attr | json }}</pre>\n</div>",
+        template: "<div tabindex=\"0\" class=\"json-explorer\"><span class=\"path\">{{ path_expression }}</span>\n  <table ng-if=\"is_object\" class=\"attributes\">\n    <tr ng-repeat=\"a in attrs\" ng-class=\"{selected: $index==index}\">\n      <td>{{ a.key  }}</td>\n      <td>{{ a.type }}</td>\n      <td>{{ a.display  }}</td>\n    </tr>\n  </table>\n</div>",
         replace: true,
         scope: {
           data: '=',
           label: '@'
         },
         link: function(scope, element, attrs) {
-          var get_attrs, get_type, get_val, go_back, move_index, root, select, set_object;
+          var get_attrs, get_index, get_type, get_val, go_back, move_index, root, select, set_object, set_path_expression;
           root = scope.data;
           scope.object = root;
           scope.path = [];
           scope.is_value = false;
+          scope.path_expression = 'init';
+          set_path_expression = function() {
+            var expr, p, _i, _len, _ref;
+            expr = scope.label || "data";
+            _ref = scope.path;
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              p = _ref[_i];
+              expr += p.pkey;
+            }
+            expr += " = " + scope.value;
+            return scope.path_expression = expr;
+          };
           get_type = function(thing) {
             if (angular.isArray(thing)) {
               return 'array';
@@ -32,16 +44,23 @@
             if (angular.isNumber(thing)) {
               return 'number';
             }
+            if (thing === true || thing === false) {
+              return 'boolean';
+            }
             return '?' + (typeof thing) + '?';
           };
           get_val = function(thing) {
-            var t;
+            var s, t;
             t = get_type(thing);
             switch (t) {
               case 'array':
                 return '[ ' + thing.length + ' ]';
               case 'object':
-                return '{...}';
+                s = JSON.stringify(thing);
+                s = s.substr(1, 39);
+                return '{' + s + '...';
+              case 'string':
+                return '"' + thing + '"';
               default:
                 return '' + thing;
             }
@@ -66,6 +85,17 @@
                 }
                 return _results;
               })();
+              attrs.sort(function(a, b) {
+                if (a.type < b.type) {
+                  return -1;
+                } else {
+                  if (a.key < b.key) {
+                    return -1;
+                  } else {
+                    return 1;
+                  }
+                }
+              });
               return attrs;
             } else {
               return [];
@@ -73,13 +103,15 @@
           };
           move_index = function(n) {
             var new_index;
-            if (scope.index >= 0) {
-              new_index = scope.index + n;
-            } else {
-              new_index = 0;
-            }
-            if ((0 <= new_index && new_index < scope.attrs.length)) {
-              return scope.index = new_index;
+            if (scope.attrs != null) {
+              if (scope.index >= 0) {
+                new_index = scope.index + n;
+              } else {
+                new_index = 0;
+              }
+              if ((0 <= new_index && new_index < scope.attrs.length)) {
+                return scope.index = new_index;
+              }
             }
           };
           set_object = function(new_obj) {
@@ -91,7 +123,8 @@
               scope.index = null;
             }
             if (angular.isObject(new_obj)) {
-              return scope.is_object = true;
+              scope.is_object = true;
+              return scope.value = get_val(new_obj);
             }
           };
           select = function() {
@@ -107,25 +140,42 @@
               if (angular.isObject(new_thing)) {
                 scope.is_object = true;
                 set_object(new_thing);
-                return scope.value = null;
               } else {
                 scope.is_object = false;
-                scope.value = "" + new_thing;
+                scope.value = get_val(new_thing);
                 scope.attrs = null;
-                return scope.index = null;
+                scope.index = null;
               }
+              return set_path_expression();
             }
           };
+          get_index = function(key) {
+            var a, i, _i, _len, _ref;
+            _ref = scope.attrs;
+            for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+              a = _ref[i];
+              if (a.key === key) {
+                return i;
+              }
+            }
+            return -1;
+          };
           go_back = function() {
-            var last_path, new_obj;
+            var index, key, last_path, new_obj, p;
             if (scope.path.length > 0) {
-              scope.path.pop();
-              if (scope.path.length === 0) {
-                return set_object(scope.data);
-              } else {
+              p = scope.path.pop();
+              key = p.key;
+              if (scope.path.length > 0) {
                 last_path = scope.path[scope.path.length - 1];
                 new_obj = last_path.obj;
-                return set_object(new_obj);
+                set_object(new_obj);
+              } else {
+                set_object(scope.data);
+              }
+              set_path_expression();
+              index = get_index(key);
+              if (index >= 0) {
+                return scope.index = index;
               }
             }
           };
@@ -157,7 +207,8 @@
             }
           });
           element[0].focus();
-          return set_object(scope.data);
+          set_object(scope.data);
+          return set_path_expression();
         }
       };
     }

@@ -19,6 +19,15 @@ module.directive 'jsonExplorer', [
 
 			scope.is_value = false # we are looking at a single Value ( like a String or Number ), not an Object or Array
 
+			scope.path_expression = 'init'
+			set_path_expression = ->
+				expr = scope.label or "data"
+				for p in scope.path
+					expr += p.pkey
+				expr += " = " + scope.value
+				scope.path_expression = expr
+
+
 			get_type = (thing)->
 				if angular.isArray thing 
 					return 'array'
@@ -28,7 +37,10 @@ module.directive 'jsonExplorer', [
 					return 'string'
 				if angular.isNumber thing
 					return 'number'
+				if thing==true or thing==false
+					return 'boolean'
 				return '?'+(typeof thing)+'?'
+
 
 			get_val = (thing)->
 				t = get_type(thing)
@@ -36,9 +48,16 @@ module.directive 'jsonExplorer', [
 					when 'array'
 						'[ '+thing.length+' ]'
 					when 'object'
-						'{...}'
+						# '{...}'
+						s = JSON.stringify(thing)
+						s = s.substr(1,39)
+						return '{' + s + '...'
+
+					when 'string'
+						'"'+thing+'"'
 					else
 						''+thing
+
 
 			get_attrs = (obj)->
 				if angular.isObject(obj)
@@ -48,17 +67,27 @@ module.directive 'jsonExplorer', [
 						type     : get_type(obj[key])
 						display  : get_val(obj[key])
 					attrs = ( make_attr(k) for k in Object.keys(obj) )
+					attrs.sort (a,b)->
+						if a.type < b.type
+							return -1
+						else
+							if a.key < b.key
+								return -1
+							else
+								return 1
 					return attrs
+
 				else
 					[]
 
 			move_index = (n)->
-				if scope.index >=0
-					new_index = scope.index + n
-				else
-					new_index = 0
-				if 0 <= new_index < scope.attrs.length
-					scope.index = new_index
+				if scope.attrs?
+					if scope.index >=0
+						new_index = scope.index + n
+					else
+						new_index = 0
+					if 0 <= new_index < scope.attrs.length
+						scope.index = new_index
 
 
 			set_object = ( new_obj )->
@@ -70,6 +99,7 @@ module.directive 'jsonExplorer', [
 					scope.index = null
 				if angular.isObject new_obj
 					scope.is_object = true
+					scope.value = get_val(new_obj)
 
 
 			select = ->
@@ -86,26 +116,50 @@ module.directive 'jsonExplorer', [
 						# 
 						scope.is_object = true
 						set_object(new_thing)
-						scope.value = null
 					else
 						#
 						# select VALUE
 						#
 						scope.is_object = false
-						scope.value = ""+new_thing
+						scope.value = get_val(new_thing)
 						scope.attrs = null
 						scope.index = null
+					set_path_expression()
+
+
+			get_index = (key)->
+				for a,i in scope.attrs
+					if a.key == key
+						return i
+				return -1
 
 
 			go_back = ->
-				if scope.path.length > 0 
-					scope.path.pop()
-					if scope.path.length == 0
-						set_object( scope.data )
-					else
+				if scope.path.length > 0
+					p = scope.path.pop()
+					key = p.key
+					if scope.path.length > 0
+						#
+						# up one level
+						#
 						last_path = scope.path[ scope.path.length - 1 ]
 						new_obj = last_path.obj
 						set_object(new_obj)
+
+					else
+						#
+						# back to the ROOT
+						#
+						set_object( scope.data )
+
+					set_path_expression()
+
+					#
+					# go back to the key that we were on last time
+					#
+					index = get_index(key)
+					if index >= 0
+						scope.index = index
 
 
 			#
@@ -139,5 +193,6 @@ module.directive 'jsonExplorer', [
 			element[0].focus()
 
 			set_object( scope.data )
+			set_path_expression()
 
 ]

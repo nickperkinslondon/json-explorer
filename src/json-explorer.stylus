@@ -4,16 +4,21 @@
 	background gray
 	border 1px solid gray
 
+
+	.path
+		font-family Monospace
+		font-weight bold
+		margin-bottom 10px
+		background white
+		padding 5px
+		border-radius 5px
+
 	&:focus
 		border 1px solid red
 		background wheat
 
-	.value
-		color green
-		font-weight bold
-		font-size 16px
-
 	table.attributes
+		margin-top 10px
 		border 1px solid gray
 		background white
 		tr
@@ -27,3 +32,7 @@
 
 	table.path
 		border 1px solid orange
+		tr
+			td
+				min-width 100px
+				min-height 10px

@@ -10,11 +10,11 @@ html(ng-app='testJsonExplorer')
 		script(src="../dist/json-explorer.js")
 		link(rel='stylesheet',href='../dist/json-explorer.css')
 		
-		//- script for this page
+		//- This Page
 		script(src="testpage.js")
 		link(rel='stylesheet',href='testpage.css')
 
-		//- Live Reload ( for development )
+		//- Live Reload ( for development, using Grunt )
 		script(src="http://localhost:35729/livereload.js")			
 
 	body(ng-controller='testController')
@@ -22,11 +22,8 @@ html(ng-app='testJsonExplorer')
 		h1 json-explorer 
 		h2 test page
 
-		hr
 		json-explorer(
 			data = 'test_data'
-			label = 'My Data'
 			)
-		hr
-
+		
 		
