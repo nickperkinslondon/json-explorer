@@ -1,0 +1,32 @@
+doctype html
+html(ng-app='testJsonExplorer')
+	head
+
+		//- Angular JS
+		script(src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular.js")
+		script(src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular-animate.js")
+		
+		//- The Thing we are testing:
+		script(src="../dist/json-explorer.js")
+		link(rel='stylesheet',href='../dist/json-explorer.css')
+		
+		//- script for this page
+		script(src="testpage.js")
+		link(rel='stylesheet',href='testpage.css')
+
+		//- Live Reload ( for development )
+		script(src="http://localhost:35729/livereload.js")			
+
+	body(ng-controller='testController')
+
+		h1 json-explorer 
+		h2 test page
+
+		hr
+		json-explorer(
+			data = 'test_data'
+			label = 'My Data'
+			)
+		hr
+
+		

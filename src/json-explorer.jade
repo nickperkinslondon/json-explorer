@@ -1,0 +1,38 @@
+
+.json-explorer(
+	tabindex="0"
+	)
+	h3 {{ label }}
+	//- h5 {{ keycode }}
+
+	//- pre {{ path.length }}
+
+	table.path
+		tr(ng-repeat='p in path')
+			td {{ p.pkey }}
+			td {{ get_type(obj) }}
+
+
+
+	.value(
+		ng-if='!is_object'
+		) {{ value }}
+
+	table.attributes(
+		ng-if='is_object'
+		)
+		tr(
+			ng-repeat='a in attrs'
+			ng-class='{selected: $index==index}'
+			)
+			td {{ a.key  }}
+			td {{ a.type }}
+			td {{ a.display  }}
+
+
+
+	h1 {{ focus }}
+	h2 {{ index }}
+
+	pre {{ selected_attr | json }}
+

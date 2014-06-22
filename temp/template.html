@@ -1,0 +1,21 @@
+
+<div tabindex="0" class="json-explorer">
+  <h3>{{ label }}</h3>
+  <table class="path">
+    <tr ng-repeat="p in path">
+      <td>{{ p.pkey }}</td>
+      <td>{{ get_type(obj) }}</td>
+    </tr>
+  </table>
+  <div ng-if="!is_object" class="value">{{ value }}</div>
+  <table ng-if="is_object" class="attributes">
+    <tr ng-repeat="a in attrs" ng-class="{selected: $index==index}">
+      <td>{{ a.key  }}</td>
+      <td>{{ a.type }}</td>
+      <td>{{ a.display  }}</td>
+    </tr>
+  </table>
+  <h1>{{ focus }}</h1>
+  <h2>{{ index }}</h2>
+  <pre>{{ selected_attr | json }}</pre>
+</div>

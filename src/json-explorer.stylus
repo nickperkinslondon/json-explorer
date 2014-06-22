@@ -1,0 +1,29 @@
+
+.json-explorer
+	padding 10px
+	background gray
+	border 1px solid gray
+
+	&:focus
+		border 1px solid red
+		background wheat
+
+	.value
+		color green
+		font-weight bold
+		font-size 16px
+
+	table.attributes
+		border 1px solid gray
+		background white
+		tr
+			td
+				min-width 100px
+				// background lightgray
+				padding 3px
+				border 1px solid gray
+			&.selected
+				background yellow
+
+	table.path
+		border 1px solid orange
